@@ -1,0 +1,23 @@
+{
+  "name": "obsidian-listbytag",
+  "version": "1.0.0",
+  "description": "List notes, tasks, and bullets by tag using Dataview.",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
+  },
+  "keywords": ["obsidian", "dataview", "tag", "list"],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^16.11.6",
+    "builtin-modules": "3.3.0",
+    "esbuild": "0.17.3",
+    "obsidian": "latest",
+    "obsidian-dataview": "0.5.68",
+    "typescript": "5.3.3"
+  },
+  "dependencies": {
+    "dayjs": "^1.11.10"
+  }
+}
