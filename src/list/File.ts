@@ -53,28 +53,33 @@ export class File {
       return renderError(this.app, getI18n(this.locale)[`${ERROR_MESSAGE}NO_FRONT_MATTER_TAG`], div, filepath);
     }
 
-    const from = tags
-      .map((tag: string, index: number) => {
-        return `#${tag} ${index === tags.length - 1 ? '' : 'OR'}`;
-      })
-      .join(' ')
-      .trim();
-
     const dataview = await this.plugin.getDataviewAPI();
-    dataview.table(
-      ['File', 'Date'],
-      dataview
-        .pages(from)
-        .filter((b: { file: TFile }) => b.file.path !== filepath)
-        .sort((b: { file: { ctime: { ts: number } } }) => b.file.ctime.ts, 'desc')
-        .map((b: { file: { link: string; ctime: { ts: number } } }) => [
-          b.file.link,
-          `[[${dayjs(b.file.ctime.ts).format('YYYY-MM-DD')}]]`,
-        ]),
-      div,
-      component,
-      filepath,
-    );
+
+    // 构建 tags 的 where 条件
+    // file.frontmatter.tags 只匹配 frontmatter 中的 tags
+    const whereConditions = tags.map((tag: string, index: number) => {
+      return `contains(lower(file.frontmatter.tags), "${tag.toLowerCase()}") ${index === tags.length - 1 ? '' : 'OR'}`;
+    }).join(' ');
+
+    // 使用 Dataview 查询，精确匹配 frontmatter.tags
+    const result = await dataview.tryQuery(`
+      TABLE file.link, file.ctime
+      FROM ""
+      WHERE ${whereConditions} AND file.path != "${filepath}"
+      SORT file.ctime DESC
+    `) as { values: any[] };
+
+    // values 是数组的数组: [[fileObj, fileObj, dateStr], ...]
+    const tableValues = result.values.map((row: any[]) => {
+      const filePath = row[0]?.path || row[1]?.path || '';
+      const dateStr = row[2] || '';
+      return [
+        `[[${filePath}]]`,
+        dateStr ? dayjs(dateStr).format('YYYY-MM-DD') : '',
+      ];
+    });
+
+    dataview.table(['File', 'Date'], tableValues, div, component, filepath);
 
     ctx.addChild(component);
   };
