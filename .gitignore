@@ -1,3 +1,14 @@
 node_modules/
 dist/
 *.js.map
+
+# macOS
+.DS_Store
+._*
+
+# Build artifacts
+main.js
+obsidian-listbytag/
+
+# Runtime data
+data.json
